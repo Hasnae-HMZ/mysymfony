@@ -1,7 +1,10 @@
 <?php
 
 namespace App\Controller;
+
+use App\Entity\Category;
 use App\Entity\Product;
+use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -9,20 +12,27 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ProductController extends AbstractController
 {
-    #[Route('/product', name: 'app_product')]
-    public function createProduct(EntityManagerInterface $entityManager): Response
+    #[Route('/product', name: 'product')]
+    public function index(ManagerRegistry $doctrine): Response
     {
+        $category = new Category();
+        $category->setName('Computer Peripherals');
+
         $product = new Product();
-        $product->setName('mouse');
-        $product->setPrice(50);
+        $product->setName('Keyboard');
+        $product->setPrice(19.99);
 
-        // tell Doctrine you want to (eventually) save the Product (no queries yet)
+        // relates this product to the category
+        $product->setCategory($category);
+
+        $entityManager = $doctrine->getManager();
+        $entityManager->persist($category);
         $entityManager->persist($product);
-
-        // actually executes the queries (i.e. the INSERT query)
         $entityManager->flush();
 
-        return new Response('Saved new product with id '.$product->getId());
+        return new Response(
+            'Saved new product with id: '.$product->getId()
+            .' and new category with id: '.$category->getId()
+        );
     }
 }
-
